@@ -44,6 +44,8 @@
 - `HttpActionImpl(HttpClient httpClient)`: Permite a injeção de um cliente HTTP personalizado.
 - `HttpActionImpl(HttpMapper httpMapper)`: Permite a injeção de um mapeador JSON personalizado.
 - `HttpActionImpl(HttpClient httpClient, HttpMapper httpMapper)`: Permite a injeção de um cliente HTTP e um mapeador JSON personalizados.
+- `HttpActionImpl(HttpHandler handler)`:  Permite a injeção de um HttpHandler
+- `HttpActionImpl(List<HttpHandler> handler)`:  Permite a injeção de uma lista de HttpHandlers
 
 ## Exceções
 

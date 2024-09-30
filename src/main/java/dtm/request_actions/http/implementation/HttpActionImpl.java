@@ -43,6 +43,11 @@ public class HttpActionImpl implements HttpAction{
         httpHandlers.add(handler);
     }
 
+    public HttpActionImpl(List<HttpHandler> handlers) {
+        init(null, new DefaultHttpMapper());
+        httpHandlers = handlers;
+    }
+
     public HttpActionImpl(HttpMapper httpMapper, HttpHandler handler) {
         init(null, httpMapper);
         httpHandlers.add(handler);
