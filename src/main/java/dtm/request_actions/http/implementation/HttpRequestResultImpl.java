@@ -162,22 +162,26 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
     }
 
     private void addEventSucess(final Optional<T> obj){
-        if(sucessEventAsync){
-            new Thread(() -> {
+        if(sucessEvent != null){
+            if(sucessEventAsync){
+                new Thread(() -> {
+                    sucessEvent.onSucess(obj);
+                }).run();
+            }else{
                 sucessEvent.onSucess(obj);
-            }).run();
-        }else{
-            sucessEvent.onSucess(obj);
+            }
         }
     }
 
     private void addEventError(final Throwable th, final String msg){
-        if(errorEventAsync){
-            new Thread(() -> {
+        if(errorEvent != null){
+            if(errorEventAsync){
+                new Thread(() -> {
+                    errorEvent.onError(th, msg);
+                }).run();
+            }else{
                 errorEvent.onError(th, msg);
-            }).run();
-        }else{
-            errorEvent.onError(th, msg);
+            }
         }
     }
 }

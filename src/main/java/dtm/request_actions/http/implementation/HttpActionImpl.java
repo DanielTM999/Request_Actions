@@ -4,12 +4,15 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.exceptions.HttpRuntimeException;
 import dtm.request_actions.http.core.HttpAction;
+import dtm.request_actions.http.core.HttpHandler;
 import dtm.request_actions.http.core.mapper.HttpMapper;
 import dtm.request_actions.http.core.result.HttpRequestResult;
 
@@ -17,6 +20,7 @@ public class HttpActionImpl implements HttpAction{
 
     private HttpClient client;
     private HttpMapper httpMapper;
+    private List<HttpHandler> httpHandlers;
 
     public HttpActionImpl() {
         init(null, new DefaultHttpMapper());
@@ -32,6 +36,26 @@ public class HttpActionImpl implements HttpAction{
 
     public HttpActionImpl(HttpClient httpClient, HttpMapper httpMapper) {
         init(httpClient, httpMapper);
+    }
+
+    public HttpActionImpl(HttpHandler handler) {
+        init(null, new DefaultHttpMapper());
+        httpHandlers.add(handler);
+    }
+
+    public HttpActionImpl(HttpMapper httpMapper, HttpHandler handler) {
+        init(null, httpMapper);
+        httpHandlers.add(handler);
+    }
+
+    public HttpActionImpl(HttpMapper httpMapper, List<HttpHandler> handlers) {
+        init(null, httpMapper);
+        httpHandlers = handlers;
+    }
+
+    @Override
+    public void addHandler(HttpHandler handler) {
+        this.httpHandlers.add(handler);
     }
 
     //GET
@@ -700,6 +724,7 @@ public class HttpActionImpl implements HttpAction{
         }
 
         this.client = client;
+        this.httpHandlers = new ArrayList<>();
         this.httpMapper = httpMapper;
     }
 
@@ -723,6 +748,11 @@ public class HttpActionImpl implements HttpAction{
             }
 
             HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            
+            for (HttpHandler httpHandler : httpHandlers) {
+                httpHandler.onResult(response);
+            }
+
             return new HttpRequestResultImpl<>(response, httpMapper);
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -740,6 +770,9 @@ public class HttpActionImpl implements HttpAction{
             }
 
             HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            for (HttpHandler httpHandler : httpHandlers) {
+                httpHandler.onResult(response);
+            }
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -757,6 +790,9 @@ public class HttpActionImpl implements HttpAction{
             }
 
             HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            for (HttpHandler httpHandler : httpHandlers) {
+                httpHandler.onResult(response);
+            }
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -774,6 +810,9 @@ public class HttpActionImpl implements HttpAction{
             }
 
             HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            for (HttpHandler httpHandler : httpHandlers) {
+                httpHandler.onResult(response);
+            }
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -790,6 +829,9 @@ public class HttpActionImpl implements HttpAction{
                 headers.forEach(requestBuilder::header);
             }
             HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            for (HttpHandler httpHandler : httpHandlers) {
+                httpHandler.onResult(response);
+            }
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
