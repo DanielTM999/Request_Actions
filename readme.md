@@ -10,6 +10,11 @@
 
 ### Métodos Implementados
 
+#### HttpHandler
+
+- `HttpHandler`: evento lançado apos a reqeisição ser executada
+- `void onResult(HttpResponse<String> responsebase)`: evento a ser executado
+
 #### GET
 
 - `HttpRequestResult<T> get(String url)`: Envia uma requisição GET para a URL especificada.
@@ -56,10 +61,9 @@ A classe lança as seguintes exceções:
 
 ## Uso
 
-Aqui está um exemplo básico de como usar a classe `HttpActionImpl`:
+Aqui está um exemplo básico de como usar a classe `HttpAction`:
 
 ```java
-    HttpAction httpAction = new HttpActionImpl();
     try {
         HttpActionGet actionGet = new HttpActionImpl();
         String result = actionGet.get("https://www.google.com").getBody().get();
@@ -68,6 +72,34 @@ Aqui está um exemplo básico de como usar a classe `HttpActionImpl`:
     } catch (HttpException e) {
         e.printStackTrace();
     }
+```
+
+Aqui está um exemplo básico de como usar a classe `HttpAction` com handler:
+```java
+    try {
+        HttpAction httpAction = new HttpActionImpl((e) -> {
+            System.out.println(r.statusCode());
+        });
+        String result = httpAction.get("https://www.google.com").getBody().get();
+
+        System.out.println(result);
+    } catch (HttpException e) {
+        e.printStackTrace();
+    }
+```
+
+```java
+    try {
+        HttpAction httpAction = new HttpActionImpl();
+        httpAction.addHandler((e) -> {
+            System.out.println(e.statusCode());
+        });
+        String result = httpAction.get("https://www.google.com").getBody().get();
+    
+        System.out.println(result);
+    } catch (HttpException e) {
+        e.printStackTrace();
+    };
 ```
 
 ## Classe HttpRequestResult
