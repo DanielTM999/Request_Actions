@@ -178,7 +178,7 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
             if(errorEventAsync){
                 new Thread(() -> {
                     errorEvent.onError(th, msg);
-                }).run();
+                }).start();
             }else{
                 errorEvent.onError(th, msg);
             }
