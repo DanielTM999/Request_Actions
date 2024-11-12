@@ -166,7 +166,7 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
             if(sucessEventAsync){
                 new Thread(() -> {
                     sucessEvent.onSucess(obj);
-                }).run();
+                }).start();
             }else{
                 sucessEvent.onSucess(obj);
             }
