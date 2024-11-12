@@ -424,7 +424,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body) throws HttpException {
-        return sendPutRequest(URI.create(url), body, null);
+        return sendPutRequest(URI.create(url), httpMapper.mapperToJson(body), null);
     }
 
     @Override
@@ -434,7 +434,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body) throws HttpException {
-        return sendPutRequest(url, body, null);
+        return sendPutRequest(url, httpMapper.mapperToJson(body), null);
     }
 
     @Override
@@ -444,7 +444,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, Map<String, String> header) throws HttpException {
-        return sendPutRequest(URI.create(url), body, header);
+        return sendPutRequest(URI.create(url), httpMapper.mapperToJson(body), header);
     }
 
     @Override
@@ -454,7 +454,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, Map<String, String> header) throws HttpException {
-        return sendPutRequest(url, body, header);
+        return sendPutRequest(url, httpMapper.mapperToJson(body), header);
     }
 
     @Override
@@ -464,7 +464,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url, urlParams)), body, null);
+        return sendPutRequest(URI.create(urlConvert(url, urlParams)), httpMapper.mapperToJson(body), null);
     }
 
     @Override
@@ -474,7 +474,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), body, null);
+        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), httpMapper.mapperToJson(body), null);
     }
 
     @Override
@@ -484,7 +484,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, Map<String, String> header, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url, urlParams)), body, header);
+        return sendPutRequest(URI.create(urlConvert(url, urlParams)), httpMapper.mapperToJson(body), header);
     }
 
     @Override
@@ -494,7 +494,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, Map<String, String> header, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), body, header);
+        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), httpMapper.mapperToJson(body), header);
     }
 
 
