@@ -13,11 +13,13 @@ import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.exceptions.HttpRuntimeException;
 import dtm.request_actions.http.core.HttpAction;
 import dtm.request_actions.http.core.HttpHandler;
+import dtm.request_actions.http.core.HttpType;
 import dtm.request_actions.http.core.mapper.HttpMapper;
 import dtm.request_actions.http.core.result.HttpRequestResult;
 
 public class HttpActionImpl implements HttpAction{
-
+    private int requestType;
+    private int responseType;
     private HttpClient client;
     private HttpMapper httpMapper;
     private List<HttpHandler> httpHandlers;
@@ -56,6 +58,26 @@ public class HttpActionImpl implements HttpAction{
     public HttpActionImpl(HttpMapper httpMapper, List<HttpHandler> handlers) {
         init(null, httpMapper);
         httpHandlers = handlers;
+    }
+
+    @Override
+    public void setRequestJSON() {
+        this.requestType = 0;
+    }
+
+    @Override
+    public void setResponseJSON() {
+        this.responseType = 0;
+    }
+
+    @Override
+    public void setRequestXML() {
+        this.requestType = 1;
+    }
+
+    @Override
+    public void setResponseXML() {
+        this.responseType = 1;
     }
 
     @Override
@@ -172,7 +194,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> post(String url, Object body) throws HttpException {
-        return sendPostRequest(URI.create(url), httpMapper.mapperToJson(body), null);
+        return sendPostRequest(URI.create(url), convertToString(body), null);
     }
 
     @Override
@@ -182,7 +204,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> post(URI url, Object body) throws HttpException {
-        return sendPostRequest(url, httpMapper.mapperToJson(body), null);
+        return sendPostRequest(url, convertToString(body), null);
     }
 
     @Override
@@ -192,7 +214,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> post(String url, Object body, Map<String, String> header) throws HttpException {
-        return sendPostRequest(URI.create(url), httpMapper.mapperToJson(body), header);
+        return sendPostRequest(URI.create(url), convertToString(body), header);
     }
 
     @Override
@@ -202,7 +224,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> post(URI url, Object body, Map<String, String> header) throws HttpException {
-        return sendPostRequest(url, httpMapper.mapperToJson(body), header);
+        return sendPostRequest(url, convertToString(body), header);
     }
 
 
@@ -424,7 +446,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body) throws HttpException {
-        return sendPutRequest(URI.create(url), httpMapper.mapperToJson(body), null);
+        return sendPutRequest(URI.create(url), convertToString(body), null);
     }
 
     @Override
@@ -434,7 +456,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body) throws HttpException {
-        return sendPutRequest(url, httpMapper.mapperToJson(body), null);
+        return sendPutRequest(url, convertToString(body), null);
     }
 
     @Override
@@ -444,7 +466,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, Map<String, String> header) throws HttpException {
-        return sendPutRequest(URI.create(url), httpMapper.mapperToJson(body), header);
+        return sendPutRequest(URI.create(url), convertToString(body), header);
     }
 
     @Override
@@ -454,7 +476,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, Map<String, String> header) throws HttpException {
-        return sendPutRequest(url, httpMapper.mapperToJson(body), header);
+        return sendPutRequest(url, convertToString(body), header);
     }
 
     @Override
@@ -464,7 +486,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url, urlParams)), httpMapper.mapperToJson(body), null);
+        return sendPutRequest(URI.create(urlConvert(url, urlParams)), convertToString(body), null);
     }
 
     @Override
@@ -474,7 +496,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), httpMapper.mapperToJson(body), null);
+        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), convertToString(body), null);
     }
 
     @Override
@@ -484,7 +506,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, Map<String, String> header, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url, urlParams)), httpMapper.mapperToJson(body), header);
+        return sendPutRequest(URI.create(urlConvert(url, urlParams)), convertToString(body), header);
     }
 
     @Override
@@ -494,7 +516,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, Map<String, String> header, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), httpMapper.mapperToJson(body), header);
+        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), convertToString(body), header);
     }
 
 
@@ -728,6 +750,8 @@ public class HttpActionImpl implements HttpAction{
             httpMapper = new DefaultHttpMapper();
         }
 
+        this.requestType = 0;
+        this.responseType = 0;
         this.client = client;
         this.httpHandlers = new ArrayList<>();
         this.httpMapper = httpMapper;
@@ -757,7 +781,8 @@ public class HttpActionImpl implements HttpAction{
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
-
+            httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
+            reset();
             return new HttpRequestResultImpl<>(response, httpMapper);
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -778,6 +803,8 @@ public class HttpActionImpl implements HttpAction{
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
+            httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
+            reset();
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -798,26 +825,8 @@ public class HttpActionImpl implements HttpAction{
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
-            return new HttpRequestResultImpl<>(response, httpMapper); 
-        } catch (Exception e) {
-            throw new HttpException(600, e.getMessage());
-        }
-    }
-
-    private <T> HttpRequestResult<T> sendPutRequest(URI url, Object body, Map<String, String> headers) throws HttpException{
-        try {
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(url)
-            .PUT(HttpRequest.BodyPublishers.ofString(httpMapper.mapperToJson(body)));
-
-            if (headers != null) {
-                headers.forEach(requestBuilder::header);
-            }
-
-            HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
-            for (HttpHandler httpHandler : httpHandlers) {
-                httpHandler.onResult(response);
-            }
+            httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
+            reset();
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -837,10 +846,18 @@ public class HttpActionImpl implements HttpAction{
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
+            httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
+            reset();
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
         }
     }
+
+    private String convertToString(Object obj){
+        return (this.requestType == 0) ? httpMapper.mapperToJson(obj) : httpMapper.mapperToXML(obj);
+    }
+
+    private void reset(){this.responseType = 0; this.requestType = 0;}
 }
 

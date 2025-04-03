@@ -5,7 +5,7 @@ import java.util.Map;
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.http.core.result.HttpRequestResult;
 
-public interface HttpActionPost {
+public interface HttpActionPost extends HttpConfigurer{
     <T> HttpRequestResult<T> post(String url, String body) throws HttpException;
     <T> HttpRequestResult<T> post(String url, Object body) throws HttpException;
     <T> HttpRequestResult<T> post(URI url, String body) throws HttpException;

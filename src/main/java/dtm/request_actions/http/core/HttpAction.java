@@ -4,7 +4,8 @@ public interface HttpAction extends
     HttpActionGet, HttpActionGetAsync,
     HttpActionPost, HttpActionPostAsync, 
     HttpActionDelete, HttpActionDeleteAsync,
-    HttpActionPut, HttpActionPutAsync
+    HttpActionPut, HttpActionPutAsync,
+    HttpConfigurer
 {
     void addHandler(HttpHandler handler);
 }

@@ -6,7 +6,7 @@ import java.util.concurrent.Future;
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.http.core.result.HttpRequestResult;
 
-public interface HttpActionDeleteAsync {
+public interface HttpActionDeleteAsync extends HttpConfigurer{
     <T> Future<HttpRequestResult<T>> deleteAsync(String url) throws HttpException;
     <T> Future<HttpRequestResult<T>> deleteAsync(String url, String... urlParams) throws HttpException;
     <T> Future<HttpRequestResult<T>> deleteAsync(URI url) throws HttpException;

@@ -6,7 +6,7 @@ import java.util.concurrent.Future;
 
 import dtm.request_actions.http.core.result.HttpRequestResult;
 
-public interface HttpActionGetAsync {
+public interface HttpActionGetAsync extends HttpConfigurer {
     <T> Future<HttpRequestResult<T>> getAsync(String url);
     <T> Future<HttpRequestResult<T>> getAsync(String url,  String... urlParams);
     <T> Future<HttpRequestResult<T>> getAsync(URI url);

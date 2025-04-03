@@ -6,7 +6,7 @@ import java.util.concurrent.Future;
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.http.core.result.HttpRequestResult;
 
-public interface HttpActionPostAsync {
+public interface HttpActionPostAsync extends HttpConfigurer{
     <T> Future<HttpRequestResult<T>> postAsync(String url, String body) throws HttpException;
     <T> Future<HttpRequestResult<T>> postAsync(String url, Object body) throws HttpException;
     <T> Future<HttpRequestResult<T>> postAsync(URI url, String body) throws HttpException;

@@ -5,7 +5,7 @@ import java.util.Map;
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.http.core.result.HttpRequestResult;
 
-public interface HttpActionPut {
+public interface HttpActionPut extends HttpConfigurer{
     <T> HttpRequestResult<T> put(String url) throws HttpException;
     <T> HttpRequestResult<T> put(URI url) throws HttpException;
     <T> HttpRequestResult<T> put(URI url, Map<String, String> header) throws HttpException;

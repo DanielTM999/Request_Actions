@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
+import dtm.request_actions.http.core.HttpType;
 import dtm.request_actions.http.core.mapper.HttpMapper;
 
 public class DefaultHttpMapper implements HttpMapper{
@@ -14,8 +15,13 @@ public class DefaultHttpMapper implements HttpMapper{
             return referenceMapper.cast(baseRequestResponse);
         }else{
             try {
-                ObjectMapper mapper = new ObjectMapper();
-                return mapper.readValue(baseRequestResponse, referenceMapper);
+                if(getResponseType().equals(HttpType.JSON)){
+                    ObjectMapper mapper = new ObjectMapper();
+                    return mapper.readValue(baseRequestResponse, referenceMapper);
+                }else{
+                    XmlMapper xmlMapper = new XmlMapper();
+                    return xmlMapper.readValue(baseRequestResponse, referenceMapper);
+                }
             } catch (Exception e) {
                return null;
             }
