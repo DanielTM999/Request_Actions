@@ -750,6 +750,7 @@ public class HttpActionImpl implements HttpAction{
     public void reset() {
         this.client = null;
         this.httpMapper = null;
+        resetObjectTypes();
         init(null, null);
     }
 
@@ -793,7 +794,6 @@ public class HttpActionImpl implements HttpAction{
                 httpHandler.onResult(response);
             }
             httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
-            resetObjectTypes();
             return new HttpRequestResultImpl<>(response, httpMapper);
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -815,7 +815,6 @@ public class HttpActionImpl implements HttpAction{
                 httpHandler.onResult(response);
             }
             httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
-            resetObjectTypes();
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -837,7 +836,6 @@ public class HttpActionImpl implements HttpAction{
                 httpHandler.onResult(response);
             }
             httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
-            resetObjectTypes();
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
@@ -858,7 +856,6 @@ public class HttpActionImpl implements HttpAction{
                 httpHandler.onResult(response);
             }
             httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
-            resetObjectTypes();
             return new HttpRequestResultImpl<>(response, httpMapper); 
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
