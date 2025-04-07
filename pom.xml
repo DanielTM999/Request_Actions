@@ -11,7 +11,8 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <jackson.version>2.18.0</jackson.version>
+        <jackson.version>2.16.2</jackson.version>
+        <jackson.xml.version>2.16.2</jackson.xml.version>
     </properties>
 
     <dependencies>
@@ -24,7 +25,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>${jackson.version}</version>
+            <version>${jackson.xml.version}</version>
         </dependency>
 
     </dependencies>
