@@ -1,9 +1,9 @@
-package dtm.request_actions.http.implementation;
+package dtm.request_actions.http.simple.implementation;
 
 import java.net.http.HttpResponse;
 import java.util.Optional;
 
-import dtm.request_actions.http.core.result.HttpHeaderResult;
+import dtm.request_actions.http.simple.core.result.HttpHeaderResult;
 
 public class HttpHeaderResultImpl extends HttpHeaderResult{
 

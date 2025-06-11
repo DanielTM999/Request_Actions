@@ -1,16 +1,17 @@
-package dtm.request_actions.http.implementation;
+package dtm.request_actions.http.simple.implementation;
 
 import java.net.http.HttpResponse;
 import java.util.Optional;
 
-import dtm.request_actions.http.core.mapper.HttpMapper;
-import dtm.request_actions.http.core.result.HttpHeaderResult;
-import dtm.request_actions.http.core.result.HttpRequestResult;
+import dtm.request_actions.http.simple.core.HttpType;
+import dtm.request_actions.http.simple.core.mapper.HttpMapper;
+import dtm.request_actions.http.simple.core.result.HttpHeaderResult;
+import dtm.request_actions.http.simple.core.result.HttpRequestResult;
 
 public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
 
     private HttpMapper httpMapper;
-    private HttpResponse<String> baseResponse;
+    private final HttpResponse<String> baseResponse;
     private int statusCode;
 
     private HttpErrorEvent errorEvent;
@@ -19,7 +20,7 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
     private HttpSucessEvent<T> sucessEvent;
     private boolean sucessEventAsync;
 
-    HttpRequestResultImpl(HttpResponse<String> baseResponse, HttpMapper httpMapper){
+    HttpRequestResultImpl(HttpResponse<String> baseResponse, HttpMapper httpMapper, HttpType httpType){
         this.baseResponse = baseResponse;
         this.httpMapper = httpMapper;
         configure();

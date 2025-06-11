@@ -1,8 +1,8 @@
-package dtm.request_actions.http.core.result;
+package dtm.request_actions.http.simple.core.result;
 
 import java.util.Optional;
 
-import dtm.request_actions.http.core.mapper.HttpMapper;
+import dtm.request_actions.http.simple.core.mapper.HttpMapper;
 
 public abstract class HttpRequestResult<T> {
     public abstract void setMapper(HttpMapper mapper);

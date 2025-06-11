@@ -1,25 +1,28 @@
-package dtm.request_actions.http.implementation;
+package dtm.request_actions.http.simple.implementation;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
+
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.exceptions.HttpRuntimeException;
-import dtm.request_actions.http.core.HttpAction;
-import dtm.request_actions.http.core.HttpHandler;
-import dtm.request_actions.http.core.HttpType;
-import dtm.request_actions.http.core.mapper.HttpMapper;
-import dtm.request_actions.http.core.result.HttpRequestResult;
+import dtm.request_actions.http.simple.core.HttpAction;
+import dtm.request_actions.http.simple.core.HttpHandler;
+import dtm.request_actions.http.simple.core.HttpType;
+import dtm.request_actions.http.simple.core.config.RequestConfiguration;
+import dtm.request_actions.http.simple.core.config.RequestConfigurationBody;
+import dtm.request_actions.http.simple.core.mapper.HttpMapper;
+import dtm.request_actions.http.simple.core.result.HttpRequestResult;
 
 public class HttpActionImpl implements HttpAction{
-    private int requestType;
-    private int responseType;
     private HttpClient client;
     private HttpMapper httpMapper;
     private List<HttpHandler> httpHandlers;
@@ -61,26 +64,6 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public void setRequestJSON() {
-        this.requestType = 0;
-    }
-
-    @Override
-    public void setResponseJSON() {
-        this.responseType = 0;
-    }
-
-    @Override
-    public void setRequestXML() {
-        this.requestType = 1;
-    }
-
-    @Override
-    public void setResponseXML() {
-        this.responseType = 1;
-    }
-
-    @Override
     public void addHandler(HttpHandler handler) {
         this.httpHandlers.add(handler);
     }
@@ -92,8 +75,22 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> HttpRequestResult<T> get(String url, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody requestConfiguration = new DefaultRequestConfigurationBody();
+        configuration.accept(requestConfiguration);
+        return sendGetRequest(URI.create(url), null, requestConfiguration);
+    }
+
+    @Override
     public <T> HttpRequestResult<T> get(String url, String... urlParams) throws HttpException {
         return sendGetRequest(URI.create(urlConvert(url, urlParams)), null);
+    }
+
+    @Override
+    public <T> HttpRequestResult<T> get(String url, Consumer<RequestConfiguration> configuration, String... urlParams) throws HttpException {
+        DefaultRequestConfigurationBody requestConfiguration = new DefaultRequestConfigurationBody();
+        configuration.accept(requestConfiguration);
+        return sendGetRequest(URI.create(urlConvert(url, urlParams)), null, requestConfiguration);
     }
 
     @Override
@@ -102,8 +99,22 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> HttpRequestResult<T> get(URI url, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody requestConfiguration = new DefaultRequestConfigurationBody();
+        configuration.accept(requestConfiguration);
+        return sendGetRequest(url, null, requestConfiguration);
+    }
+
+    @Override
     public <T> HttpRequestResult<T> get(String url, Map<String, String> header) throws HttpException {
         return sendGetRequest(URI.create(url), header);
+    }
+
+    @Override
+    public <T> HttpRequestResult<T> get(String url, Map<String, String> header, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody requestConfiguration = new DefaultRequestConfigurationBody();
+        configuration.accept(requestConfiguration);
+        return sendGetRequest(URI.create(url), header, requestConfiguration);
     }
 
     @Override
@@ -112,10 +123,24 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> HttpRequestResult<T> get(String url, Map<String, String> header, Consumer<RequestConfiguration> configuration, String... urlParams) throws HttpException {
+        DefaultRequestConfigurationBody requestConfiguration = new DefaultRequestConfigurationBody();
+        configuration.accept(requestConfiguration);
+        return sendGetRequest(URI.create(urlConvert(url, urlParams)), header, requestConfiguration);
+    }
+
+    @Override
     public <T> HttpRequestResult<T> get(URI url, Map<String, String> header) throws HttpException {
         return sendGetRequest(url, header);
     }
-    
+
+    @Override
+    public <T> HttpRequestResult<T> get(URI url, Map<String, String> header, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody requestConfiguration = new DefaultRequestConfigurationBody();
+        configuration.accept(requestConfiguration);
+        return sendGetRequest(url, header, requestConfiguration);
+    }
+
 
     //Async GET
     @Override
@@ -123,6 +148,17 @@ public class HttpActionImpl implements HttpAction{
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return get(url);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> getAsync(String url, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return get(url, configuration);
             } catch (HttpException e) {
                 throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
             }
@@ -141,10 +177,32 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> Future<HttpRequestResult<T>> getAsync(String url, Consumer<RequestConfiguration> configuration, String... urlParams) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return get(url, configuration, urlParams);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
     public <T> Future<HttpRequestResult<T>> getAsync(URI url)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return get(url);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> getAsync(URI url, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return get(url, configuration);
             } catch (HttpException e) {
                 throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
             }
@@ -163,10 +221,32 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> Future<HttpRequestResult<T>> getAsync(String url, Map<String, String> header, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return get(url, header, configuration);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
     public <T> Future<HttpRequestResult<T>> getAsync(String url, Map<String, String> header, String... urlParams){
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return get(urlConvert(url, urlParams), header);
+                return get(url, header, urlParams);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> getAsync(String url, Map<String, String> header, Consumer<RequestConfiguration> configuration, String... urlParams) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return get(url, header, configuration, urlParams);
             } catch (HttpException e) {
                 throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
             }
@@ -183,8 +263,18 @@ public class HttpActionImpl implements HttpAction{
             }
         });
     }
-    
-    
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> getAsync(URI url, Map<String, String> header, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return get(url, header, configuration);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
 
     //POST
     @Override
@@ -193,8 +283,22 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> HttpRequestResult<T> post(String url, String body, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody configurationBody = new DefaultRequestConfigurationBody();
+        configuration.accept(configurationBody);
+        return sendPostRequest(URI.create(url), body, null, configurationBody);
+    }
+
+    @Override
     public <T> HttpRequestResult<T> post(String url, Object body) throws HttpException {
-        return sendPostRequest(URI.create(url), convertToString(body), null);
+        return sendPostRequest(URI.create(url), body, null);
+    }
+
+    @Override
+    public <T> HttpRequestResult<T> post(String url, Object body, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody configurationBody = new DefaultRequestConfigurationBody();
+        configuration.accept(configurationBody);
+        return sendPostRequest(URI.create(url), body, null, configurationBody);
     }
 
     @Override
@@ -203,8 +307,22 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> HttpRequestResult<T> post(URI url, String body, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody configurationBody = new DefaultRequestConfigurationBody();
+        configuration.accept(configurationBody);
+        return sendPostRequest(url, body, null, configurationBody);
+    }
+
+    @Override
     public <T> HttpRequestResult<T> post(URI url, Object body) throws HttpException {
-        return sendPostRequest(url, convertToString(body), null);
+        return sendPostRequest(url, body, null);
+    }
+
+    @Override
+    public <T> HttpRequestResult<T> post(URI url, Object body, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody configurationBody = new DefaultRequestConfigurationBody();
+        configuration.accept(configurationBody);
+        return sendPostRequest(url, body, null, configurationBody);
     }
 
     @Override
@@ -213,8 +331,22 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> HttpRequestResult<T> post(String url, String body, Map<String, String> header, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody configurationBody = new DefaultRequestConfigurationBody();
+        configuration.accept(configurationBody);
+        return sendPostRequest(URI.create(url), body, header, configurationBody);
+    }
+
+    @Override
     public <T> HttpRequestResult<T> post(String url, Object body, Map<String, String> header) throws HttpException {
-        return sendPostRequest(URI.create(url), convertToString(body), header);
+        return sendPostRequest(URI.create(url), (body), header);
+    }
+
+    @Override
+    public <T> HttpRequestResult<T> post(String url, Object body, Map<String, String> header, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody configurationBody = new DefaultRequestConfigurationBody();
+        configuration.accept(configurationBody);
+        return sendPostRequest(URI.create(url), body, header, configurationBody);
     }
 
     @Override
@@ -223,8 +355,22 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> HttpRequestResult<T> post(URI url, String body, Map<String, String> header, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody configurationBody = new DefaultRequestConfigurationBody();
+        configuration.accept(configurationBody);
+        return sendPostRequest(url, body, header, configurationBody);
+    }
+
+    @Override
     public <T> HttpRequestResult<T> post(URI url, Object body, Map<String, String> header) throws HttpException {
-        return sendPostRequest(url, convertToString(body), header);
+        return sendPostRequest(url, (body), header);
+    }
+
+    @Override
+    public <T> HttpRequestResult<T> post(URI url, Object body, Map<String, String> header, Consumer<RequestConfiguration> configuration) throws HttpException {
+        DefaultRequestConfigurationBody configurationBody = new DefaultRequestConfigurationBody();
+        configuration.accept(configurationBody);
+        return sendPostRequest(url, body, header, configurationBody);
     }
 
 
@@ -234,6 +380,17 @@ public class HttpActionImpl implements HttpAction{
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return post(url, body);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> postAsync(String url, String body, Consumer<RequestConfiguration> configuration)  {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return post(url, body, configuration);
             } catch (HttpException e) {
                 throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
             }
@@ -252,10 +409,32 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> Future<HttpRequestResult<T>> postAsync(String url, Object body, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return post(url, body, configuration);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
     public <T> Future<HttpRequestResult<T>> postAsync(URI url, String body) throws HttpException {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return post(url, body);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> postAsync(URI url, String body, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return post(url, body, configuration);
             } catch (HttpException e) {
                 throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
             }
@@ -274,7 +453,18 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> postAsync(String url, String body, Map<String, String> header) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> postAsync(URI url, Object body, Consumer<RequestConfiguration> configuration)  {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return post(url, body, configuration);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> postAsync(String url, String body, Map<String, String> header) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return post(url, body, header);
@@ -285,10 +475,32 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> postAsync(String url, Object body, Map<String, String> header) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> postAsync(String url, String body, Map<String, String> header, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return post(url, body, header, configuration);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> postAsync(String url, Object body, Map<String, String> header)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return post(url, body, header);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public <T> Future<HttpRequestResult<T>> postAsync(String url, Object body, Map<String, String> header, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return post(url, body, header, configuration);
             } catch (HttpException e) {
                 throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
             }
@@ -307,6 +519,17 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
+    public <T> Future<HttpRequestResult<T>> postAsync(URI url, String body, Map<String, String> header, Consumer<RequestConfiguration> configuration)  {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return post(url, body, header, configuration);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+    @Override
     public <T> Future<HttpRequestResult<T>> postAsync(URI url, Object body, Map<String, String> header) throws HttpException {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -317,7 +540,18 @@ public class HttpActionImpl implements HttpAction{
         });
     }
 
-    
+    @Override
+    public <T> Future<HttpRequestResult<T>> postAsync(URI url, Object body, Map<String, String> header, Consumer<RequestConfiguration> configuration) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return post(url, body, header, configuration);
+            } catch (HttpException e) {
+                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+            }
+        });
+    }
+
+
     //DELETE
     @Override
     public <T> HttpRequestResult<T> delete(String url) throws HttpException {
@@ -446,7 +680,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body) throws HttpException {
-        return sendPutRequest(URI.create(url), convertToString(body), null);
+        return sendPutRequest(URI.create(url), (body), null);
     }
 
     @Override
@@ -456,7 +690,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body) throws HttpException {
-        return sendPutRequest(url, convertToString(body), null);
+        return sendPutRequest(url, (body), null);
     }
 
     @Override
@@ -466,7 +700,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, Map<String, String> header) throws HttpException {
-        return sendPutRequest(URI.create(url), convertToString(body), header);
+        return sendPutRequest(URI.create(url), (body), header);
     }
 
     @Override
@@ -476,7 +710,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, Map<String, String> header) throws HttpException {
-        return sendPutRequest(url, convertToString(body), header);
+        return sendPutRequest(url, (body), header);
     }
 
     @Override
@@ -486,7 +720,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url, urlParams)), convertToString(body), null);
+        return sendPutRequest(URI.create(urlConvert(url, urlParams)), (body), null);
     }
 
     @Override
@@ -496,7 +730,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), convertToString(body), null);
+        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), (body), null);
     }
 
     @Override
@@ -506,7 +740,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(String url, Object body, Map<String, String> header, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url, urlParams)), convertToString(body), header);
+        return sendPutRequest(URI.create(urlConvert(url, urlParams)), (body), header);
     }
 
     @Override
@@ -516,7 +750,7 @@ public class HttpActionImpl implements HttpAction{
 
     @Override
     public <T> HttpRequestResult<T> put(URI url, Object body, Map<String, String> header, String... urlParams) throws HttpException {
-        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), convertToString(body), header);
+        return sendPutRequest(URI.create(urlConvert(url.toString(), urlParams)), (body), header);
     }
 
 
@@ -555,7 +789,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, String body) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, String body) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body);
@@ -566,7 +800,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, Map<String, String> header) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, Map<String, String> header)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, header);
@@ -577,7 +811,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, Object body) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, Object body) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body);
@@ -588,7 +822,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(URI url, String body) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(URI url, String body) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body);
@@ -599,7 +833,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(URI url, Object body) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(URI url, Object body) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body);
@@ -610,7 +844,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, String body, Map<String, String> header) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, String body, Map<String, String> header) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, header);
@@ -621,7 +855,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, Object body, Map<String, String> header) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, Object body, Map<String, String> header) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, header);
@@ -632,7 +866,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(URI url, String body, Map<String, String> header) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(URI url, String body, Map<String, String> header) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, header);
@@ -643,7 +877,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(URI url, Object body, Map<String, String> header) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(URI url, Object body, Map<String, String> header)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, header);
@@ -654,7 +888,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, String body, String... urlParams) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, String body, String... urlParams)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, urlParams);
@@ -665,7 +899,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, Object body, String... urlParams) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, Object body, String... urlParams)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, urlParams);
@@ -676,7 +910,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(URI url, String body, String... urlParams) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(URI url, String body, String... urlParams)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, urlParams);
@@ -687,7 +921,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(URI url, Object body, String... urlParams) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(URI url, Object body, String... urlParams)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, urlParams);
@@ -698,7 +932,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, String body, Map<String, String> header, String... urlParams) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, String body, Map<String, String> header, String... urlParams)  {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, header, urlParams);
@@ -709,7 +943,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(String url, Object body, Map<String, String> header, String... urlParams) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(String url, Object body, Map<String, String> header, String... urlParams){
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, header, urlParams);
@@ -720,7 +954,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(URI url, String body, Map<String, String> header, String... urlParams) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(URI url, String body, Map<String, String> header, String... urlParams) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, header, urlParams);
@@ -731,7 +965,7 @@ public class HttpActionImpl implements HttpAction{
     }
 
     @Override
-    public <T> Future<HttpRequestResult<T>> putAsync(URI url, Object body, Map<String, String> header, String... urlParams) throws HttpException {
+    public <T> Future<HttpRequestResult<T>> putAsync(URI url, Object body, Map<String, String> header, String... urlParams) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return put(url, body, header, urlParams);
@@ -750,7 +984,6 @@ public class HttpActionImpl implements HttpAction{
     public void reset() {
         this.client = null;
         this.httpMapper = null;
-        resetObjectTypes();
         init(null, null);
     }
 
@@ -762,8 +995,6 @@ public class HttpActionImpl implements HttpAction{
             httpMapper = new DefaultHttpMapper();
         }
 
-        this.requestType = 0;
-        this.responseType = 0;
         this.client = client;
         this.httpHandlers = new ArrayList<>();
         this.httpMapper = httpMapper;
@@ -778,11 +1009,20 @@ public class HttpActionImpl implements HttpAction{
         return url;
     }
 
+    //get
     private <T> HttpRequestResult<T> sendGetRequest(URI url, Map<String, String> headers) throws HttpException{
+        return sendGetRequest(url, headers, new DefaultRequestConfigurationBody());
+    }
+
+    private <T> HttpRequestResult<T> sendGetRequest(URI url, Map<String, String> headers, RequestConfigurationBody configurationBody) throws HttpException{
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(url)
             .GET();
+
+            if(configurationBody.getTimeout() > 0){
+                requestBuilder.timeout(Duration.ofMillis(configurationBody.getTimeout()));
+            }
 
             if (headers != null) {
                 headers.forEach(requestBuilder::header);
@@ -793,18 +1033,26 @@ public class HttpActionImpl implements HttpAction{
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
-            httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
-            return new HttpRequestResultImpl<>(response, httpMapper);
+            return new HttpRequestResultImpl<>(response, httpMapper, configurationBody.getHttpTypeResponse());
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
         }
-    }    
+    }
 
-    private <T> HttpRequestResult<T> sendPostRequest(URI url, String body, Map<String, String> headers) throws HttpException{
+    //post
+    private <T> HttpRequestResult<T> sendPostRequest(URI url, Object body, Map<String, String> headers) throws HttpException{
+        return sendPostRequest(url, body, headers, new DefaultRequestConfigurationBody());
+    }
+
+    private <T> HttpRequestResult<T> sendPostRequest(URI url, Object body, Map<String, String> headers, RequestConfigurationBody configurationBody) throws HttpException{
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(url)
-            .POST(HttpRequest.BodyPublishers.ofString(body));
+            .POST(HttpRequest.BodyPublishers.ofString(ofString(configurationBody.getHttpTypeBody(),body)));
+
+            if(configurationBody.getTimeout() > 0){
+                requestBuilder.timeout(Duration.ofMillis(configurationBody.getTimeout()));
+            }
 
             if (headers != null) {
                 headers.forEach(requestBuilder::header);
@@ -814,18 +1062,26 @@ public class HttpActionImpl implements HttpAction{
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
-            httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
-            return new HttpRequestResultImpl<>(response, httpMapper); 
+            return new HttpRequestResultImpl<>(response, httpMapper, configurationBody.getHttpTypeResponse());
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
         }
     }
 
-    private <T> HttpRequestResult<T> sendPutRequest(URI url, String body, Map<String, String> headers) throws HttpException{
+    //put
+    private <T> HttpRequestResult<T> sendPutRequest(URI url, Object body, Map<String, String> headers) throws HttpException{
+        return sendPutRequest(url, body, headers, new DefaultRequestConfigurationBody());
+    }
+
+    private <T> HttpRequestResult<T> sendPutRequest(URI url, Object body, Map<String, String> headers, RequestConfigurationBody configurationBody) throws HttpException{
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(url)
-            .PUT(HttpRequest.BodyPublishers.ofString(body));
+            .PUT(HttpRequest.BodyPublishers.ofString(ofString(configurationBody.getHttpTypeBody(),body)));
+
+            if(configurationBody.getTimeout() > 0){
+                requestBuilder.timeout(Duration.ofMillis(configurationBody.getTimeout()));
+            }
 
             if (headers != null) {
                 headers.forEach(requestBuilder::header);
@@ -835,19 +1091,28 @@ public class HttpActionImpl implements HttpAction{
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
-            httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
-            return new HttpRequestResultImpl<>(response, httpMapper); 
+            return new HttpRequestResultImpl<>(response, httpMapper, configurationBody.getHttpTypeResponse());
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
         }
     }
 
+
+    //delete
     private <T> HttpRequestResult<T> sendDeleteRequest(URI url, Map<String, String> headers) throws HttpException{
+        return sendDeleteRequest(url, headers, new DefaultRequestConfigurationBody());
+    }
+
+    private <T> HttpRequestResult<T> sendDeleteRequest(URI url, Map<String, String> headers, RequestConfigurationBody configurationBody) throws HttpException{
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(url)
             .DELETE();
 
+            if(configurationBody.getTimeout() > 0){
+                requestBuilder.timeout(Duration.ofMillis(configurationBody.getTimeout()));
+            }
+
             if (headers != null) {
                 headers.forEach(requestBuilder::header);
             }
@@ -855,18 +1120,17 @@ public class HttpActionImpl implements HttpAction{
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
-            httpMapper.setResponseType((responseType == 0) ? HttpType.JSON : HttpType.XML);
-            return new HttpRequestResultImpl<>(response, httpMapper); 
+            return new HttpRequestResultImpl<>(response, httpMapper, configurationBody.getHttpTypeResponse());
         } catch (Exception e) {
             throw new HttpException(600, e.getMessage());
         }
     }
 
-    private String convertToString(Object obj){
-        return (this.requestType == 0) ? httpMapper.mapperToJson(obj) : httpMapper.mapperToXML(obj);
-    }
 
-    private void resetObjectTypes(){this.responseType = 0; this.requestType = 0;}
+
+    private String ofString(HttpType httpType, Object body){
+        return (httpType == HttpType.JSON) ? httpMapper.mapperToJson(body) : httpMapper.mapperToXML(body);
+    }
 
 }
 

@@ -1,4 +1,4 @@
-package dtm.request_actions.http.core.result;
+package dtm.request_actions.http.simple.core.result;
 
 import java.util.Optional;
 

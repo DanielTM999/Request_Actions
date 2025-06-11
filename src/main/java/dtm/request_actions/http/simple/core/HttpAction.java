@@ -1,4 +1,4 @@
-package dtm.request_actions.http.core;
+package dtm.request_actions.http.simple.core;
 
 public interface HttpAction extends 
     HttpActionGet, HttpActionGetAsync,

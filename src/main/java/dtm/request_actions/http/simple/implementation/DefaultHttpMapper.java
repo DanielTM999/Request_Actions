@@ -1,21 +1,21 @@
-package dtm.request_actions.http.implementation;
+package dtm.request_actions.http.simple.implementation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
-import dtm.request_actions.http.core.HttpType;
-import dtm.request_actions.http.core.mapper.HttpMapper;
+import dtm.request_actions.http.simple.core.HttpType;
+import dtm.request_actions.http.simple.core.mapper.HttpMapper;
 
 public class DefaultHttpMapper implements HttpMapper{
 
     @Override
-    public <T> T mapper(String baseRequestResponse, Class<T> referenceMapper) {
+    public <T> T mapper(String baseRequestResponse, Class<T> referenceMapper, HttpType httpType) {
         if(referenceMapper.equals(String.class)){
             return referenceMapper.cast(baseRequestResponse);
         }else{
             try {
-                if(getResponseType().equals(HttpType.JSON)){
+                if(httpType.equals(HttpType.JSON)){
                     ObjectMapper mapper = new ObjectMapper();
                     return mapper.readValue(baseRequestResponse, referenceMapper);
                 }else{
