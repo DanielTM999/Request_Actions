@@ -13,6 +13,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,8 +90,19 @@ public class DownloadObserverService implements DownloadObserver {
                 }
             }
 
+            Map<String, List<String>> userResponseHeaders = new ConcurrentHashMap<>();
+            Map<String, List<String>> responseHeaders = connection.getHeaderFields();
+            for (Map.Entry<String, List<String>> entry : responseHeaders.entrySet()) {
+                String headerName = entry.getKey();
+                List<String> headerValues = entry.getValue();
+
+                if (headerName != null && headerValues != null) {
+                    userResponseHeaders.put(headerName, headerValues);
+                }
+            }
+
             int contentLength = connection.getContentLength();
-            client.onStart(contentLength);
+            client.onStart(contentLength, userResponseHeaders);
 
             try (InputStream input = connection.getInputStream(); ByteArrayOutputStream output = new ByteArrayOutputStream()){
                 byte[] buffer = new byte[observerConfiguration.getBufferSize()];
@@ -107,10 +119,10 @@ public class DownloadObserverService implements DownloadObserver {
                         }
                     }
                     output.write(buffer, 0, bytesRead);
-                    client.onProgress(totalRead, contentLength);
+                    client.onProgress(totalRead, contentLength, userResponseHeaders);
                 }
 
-                client.onComplete(output.toByteArray());
+                client.onComplete(output.toByteArray(), userResponseHeaders);
             }
 
         }catch (Exception e){
@@ -121,4 +133,5 @@ public class DownloadObserverService implements DownloadObserver {
         }
 
     }
+
 }
