@@ -1,19 +1,30 @@
 package dtm.request_actions.http.simple.implementation;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.exceptions.HttpRuntimeException;
+import dtm.request_actions.http.simple.annotations.MultipartForm;
 import dtm.request_actions.http.simple.core.HttpAction;
 import dtm.request_actions.http.simple.core.HttpHandler;
 import dtm.request_actions.http.simple.core.HttpType;
@@ -1046,9 +1057,17 @@ public class HttpActionImpl implements HttpAction{
 
     private <T> HttpRequestResult<T> sendPostRequest(URI url, Object body, Map<String, String> headers, RequestConfigurationBody configurationBody) throws HttpException{
         try {
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(url)
-            .POST(HttpRequest.BodyPublishers.ofString(ofString(configurationBody.getHttpTypeBody(),body)));
+            boolean isMultpartForm = isMultipartForm(body);
+            HttpRequest.Builder requestBuilder;
+            if(isMultpartForm){
+                requestBuilder = buildMultipartRequest(body)
+                        .uri(url);
+            }else{
+                requestBuilder = HttpRequest.newBuilder()
+                        .uri(url)
+                        .POST(HttpRequest.BodyPublishers.ofString(ofString(configurationBody.getHttpTypeBody(), body)));
+
+            }
 
             if(configurationBody.getTimeout() > 0){
                 requestBuilder.timeout(Duration.ofMillis(configurationBody.getTimeout()));
@@ -1127,9 +1146,142 @@ public class HttpActionImpl implements HttpAction{
     }
 
 
-
     private String ofString(HttpType httpType, Object body){
         return (httpType == HttpType.JSON) ? httpMapper.mapperToJson(body) : httpMapper.mapperToXML(body);
+    }
+
+    private boolean isMultipartForm(Object body){
+        if (body == null) {
+            return false;
+        }
+
+        Class<?> clazz = body.getClass();
+        return clazz.isAnnotationPresent(MultipartForm.class);
+    }
+
+    private HttpRequest.Builder buildMultipartRequest(Object body) throws IOException{
+        String boundary = "----JavaBoundaryHttpActions" + UUID.randomUUID();
+        HttpRequest.BodyPublisher bodyPublisher = buildMultipartBodyPublisher(body, boundary);
+
+        return HttpRequest.newBuilder()
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .POST(bodyPublisher);
+
+    }
+
+    private HttpRequest.BodyPublisher buildMultipartBodyPublisher(Object body, String boundary) throws IOException {
+        List<HttpRequest.BodyPublisher> publishers = new ArrayList<>();
+
+        processObjectFieldsPublisher(body, boundary, "", publishers);
+
+        publishers.add(HttpRequest.BodyPublishers.ofByteArray(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        return HttpRequest.BodyPublishers.concat(publishers.toArray(new HttpRequest.BodyPublisher[0]));
+    }
+
+    private void processObjectFieldsPublisher(Object obj, String boundary, String parentPrefix, List<HttpRequest.BodyPublisher> publishers) throws IOException {
+        if (obj == null) return;
+
+        Class<?> clazz = obj.getClass();
+
+        for (Field field : clazz.getDeclaredFields()) {
+            try {
+                field.setAccessible(true);
+                Object value = field.get(obj);
+                if (value == null) continue;
+
+                String fieldName = parentPrefix.isEmpty() ? field.getName() : parentPrefix + "." + field.getName();
+
+                if (value instanceof File file) {
+                    publishers.add(filePartPublisher(fieldName, file, boundary));
+                } else if (value instanceof Path path) {
+                    publishers.add(filePartPublisher(fieldName, path.toFile(), boundary));
+                } else if (isPrimitiveOrWrapperOrString(value.getClass())) {
+                    publishers.add(textPartPublisher(fieldName, value.toString(), boundary));
+                } else if (value instanceof Iterable<?> iterable) {
+                    processIterablePublisher(fieldName, iterable, boundary, publishers);
+                } else {
+                    processObjectFieldsPublisher(value, boundary, fieldName, publishers);
+                }
+
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Erro ao acessar o campo: " + field.getName(), e);
+            }
+        }
+    }
+
+    private void processIterablePublisher(String fieldName, Iterable<?> iterable, String boundary, List<HttpRequest.BodyPublisher> publishers) throws IOException {
+        int index = 0;
+
+        for (Object item : iterable) {
+            if (item == null) continue;
+
+            String indexedName = fieldName + "[" + index + "]";
+
+            if (item instanceof File f) {
+                publishers.add(filePartPublisher(indexedName, f, boundary));
+            } else if (item instanceof Path p) {
+                publishers.add(filePartPublisher(indexedName, p.toFile(), boundary));
+            } else if (isPrimitiveOrWrapperOrString(item.getClass())) {
+                publishers.add(textPartPublisher(indexedName, item.toString(), boundary));
+            } else {
+                processObjectFieldsPublisher(item, boundary, indexedName, publishers);
+            }
+            index++;
+        }
+    }
+
+    private HttpRequest.BodyPublisher textPartPublisher(String fieldName, Object value, String boundary) throws IOException {
+        String part = "--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"" + fieldName + "\"\r\n\r\n"
+                + value + "\r\n";
+        return HttpRequest.BodyPublishers.ofByteArray(part.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private HttpRequest.BodyPublisher filePartPublisher(String fieldName, File file, String boundary) throws IOException {
+        String mimeType = Files.probeContentType(file.toPath());
+        if (mimeType == null) mimeType = "application/octet-stream";
+
+        String header = "--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + file.getName() + "\"\r\n"
+                + "Content-Type: " + mimeType + "\r\n\r\n";
+
+        String footer = "\r\n";
+
+        return HttpRequest.BodyPublishers.concat(
+                HttpRequest.BodyPublishers.ofByteArray(header.getBytes(StandardCharsets.UTF_8)),
+                HttpRequest.BodyPublishers.ofInputStream(() -> {
+                    try {
+                        return Files.newInputStream(file.toPath());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }),
+                HttpRequest.BodyPublishers.ofByteArray(footer.getBytes(StandardCharsets.UTF_8))
+        );
+    }
+
+    private boolean isPrimitiveOrWrapperOrString(Class<?> clazz) {
+        return clazz.isPrimitive() ||
+                clazz == String.class ||
+                clazz == Boolean.class ||
+                clazz == Byte.class ||
+                clazz == Character.class ||
+                clazz == Short.class ||
+                clazz == Integer.class ||
+                clazz == Long.class ||
+                clazz == Float.class ||
+                clazz == Double.class ||
+                CharSequence.class.isAssignableFrom(clazz) ||
+                clazz == BigDecimal.class ||
+                clazz == BigInteger.class ||
+                clazz.isEnum() ||
+                clazz == LocalDate.class ||
+                clazz == LocalDateTime.class ||
+                clazz == ZonedDateTime.class ||
+                clazz == OffsetDateTime.class ||
+                clazz == OffsetTime.class ||
+                clazz == Instant.class;
     }
 
 }
