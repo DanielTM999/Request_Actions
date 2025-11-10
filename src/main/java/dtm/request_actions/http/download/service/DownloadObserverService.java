@@ -119,7 +119,11 @@ public class DownloadObserverService implements DownloadObserver {
                         }
                     }
                     output.write(buffer, 0, bytesRead);
-                    client.onProgress(totalRead, contentLength, userResponseHeaders);
+                    try{
+                        client.onProgress(totalRead, contentLength, userResponseHeaders);
+                    }catch (Exception e){
+                        client.onError(e);
+                    }
                 }
 
                 client.onComplete(output.toByteArray(), userResponseHeaders);
