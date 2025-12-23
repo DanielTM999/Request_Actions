@@ -1222,6 +1222,7 @@ public class HttpActionImpl implements HttpAction{
         for (Object item : iterable) {
             if (item == null) continue;
 
+            Class<?> clazz = item.getClass();
             String indexedName = fieldName + "[" + index + "]";
 
             if (item instanceof File f) {
@@ -1231,7 +1232,13 @@ public class HttpActionImpl implements HttpAction{
             } else if (isPrimitiveOrWrapperOrString(item.getClass())) {
                 publishers.add(textPartPublisher(indexedName, item.toString(), boundary));
             } else {
-                processObjectFieldsPublisher(item, boundary, indexedName, publishers);
+                if(clazz.isAnnotationPresent(Encode.class)){
+                    Encode encode = clazz.getAnnotation(Encode.class);
+                    String content = ofString(encode.value(), item);
+                    publishers.add(textPartPublisher(fieldName, content, boundary));
+                }else{
+                    processObjectFieldsPublisher(item, boundary, fieldName, publishers);
+                }
             }
             index++;
         }
