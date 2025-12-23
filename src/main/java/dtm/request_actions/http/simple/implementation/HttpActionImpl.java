@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.exceptions.HttpRuntimeException;
+import dtm.request_actions.http.simple.annotations.Encode;
 import dtm.request_actions.http.simple.annotations.MultipartForm;
 import dtm.request_actions.http.simple.core.HttpAction;
 import dtm.request_actions.http.simple.core.HttpHandler;
@@ -1066,7 +1067,6 @@ public class HttpActionImpl implements HttpAction{
                 requestBuilder = HttpRequest.newBuilder()
                         .uri(url)
                         .POST(HttpRequest.BodyPublishers.ofString(ofString(configurationBody.getHttpTypeBody(), body)));
-
             }
 
             if(configurationBody.getTimeout() > 0){
@@ -1201,7 +1201,13 @@ public class HttpActionImpl implements HttpAction{
                 } else if (value instanceof Iterable<?> iterable) {
                     processIterablePublisher(fieldName, iterable, boundary, publishers);
                 } else {
-                    processObjectFieldsPublisher(value, boundary, fieldName, publishers);
+                    if(clazz.isAnnotationPresent(Encode.class)){
+                        Encode encode = clazz.getAnnotation(Encode.class);
+                        String content = ofString(encode.value(), value);
+                        publishers.add(textPartPublisher(fieldName, content, boundary));
+                    }else{
+                        processObjectFieldsPublisher(value, boundary, fieldName, publishers);
+                    }
                 }
 
             } catch (IllegalAccessException e) {
