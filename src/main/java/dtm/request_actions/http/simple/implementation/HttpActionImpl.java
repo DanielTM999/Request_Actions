@@ -1000,6 +1000,11 @@ public class HttpActionImpl implements HttpAction{
         init(null, null);
     }
 
+    @Override
+    public HttpMapper getHttpMapper() {
+        return this.httpMapper;
+    }
+
     private void init(HttpClient client, HttpMapper httpMapper){
         if(client == null){
             client = HttpClient.newHttpClient();
