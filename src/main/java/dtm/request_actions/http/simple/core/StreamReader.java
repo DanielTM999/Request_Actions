@@ -16,5 +16,8 @@ public interface StreamReader extends AutoCloseable {
     void skip(int bytes);
 
     int availableBytes();
+
+    boolean hasRemainingBytes(int size);
+
     boolean isFinished();
 }

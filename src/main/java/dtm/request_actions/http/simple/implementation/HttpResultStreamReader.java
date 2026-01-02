@@ -104,6 +104,19 @@ public class HttpResultStreamReader implements StreamReader {
     }
 
     @Override
+    public boolean hasRemainingBytes(int size) {
+        if (buffer.size() - pos >= size) {
+            return true;
+        }
+        try {
+            ensureAvailable(size);
+        } catch (RuntimeException e) {
+            return false;
+        }
+        return buffer.size() - pos >= size;
+    }
+
+    @Override
     public boolean isFinished() {
         return (finished && pos >= buffer.size());
     }
