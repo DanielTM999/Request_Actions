@@ -1,6 +1,6 @@
 package dtm.request_actions.exceptions;
 
-public class HttpException extends ErrorBaseException{
+public class HttpException extends ErrorBaseRuntimeException{
     
     public HttpException(String msg) {
         super(msg);

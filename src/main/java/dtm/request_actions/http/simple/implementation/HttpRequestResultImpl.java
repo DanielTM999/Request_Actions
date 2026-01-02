@@ -1,17 +1,28 @@
 package dtm.request_actions.http.simple.implementation;
 
+import java.io.InputStream;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
+import dtm.request_actions.exceptions.ErrorBaseRuntimeException;
+import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.http.simple.core.HttpType;
+import dtm.request_actions.http.simple.core.StreamReader;
 import dtm.request_actions.http.simple.core.mapper.HttpMapper;
 import dtm.request_actions.http.simple.core.result.HttpHeaderResult;
 import dtm.request_actions.http.simple.core.result.HttpRequestResult;
+import dtm.request_actions.http.simple.core.result.event.HttpErrorEvent;
+import dtm.request_actions.http.simple.core.result.event.HttpSucessEvent;
 
 public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
 
     private HttpMapper httpMapper;
-    private final HttpResponse<String> baseResponse;
+    private final HttpResponse<InputStream> baseResponse;
+    private final StreamReader streamReader;
+    private final LazyBody lazyBody;
     private int statusCode;
 
     private HttpErrorEvent errorEvent;
@@ -20,9 +31,11 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
     private HttpSucessEvent<T> sucessEvent;
     private boolean sucessEventAsync;
 
-    HttpRequestResultImpl(HttpResponse<String> baseResponse, HttpMapper httpMapper, HttpType httpType){
+    HttpRequestResultImpl(HttpResponse<InputStream> baseResponse, HttpMapper httpMapper, HttpType httpType){
         this.baseResponse = baseResponse;
         this.httpMapper = httpMapper;
+        this.streamReader = new HttpResultStreamReader(baseResponse.body());
+        this.lazyBody = new LazyBody();
         configure();
     }
 
@@ -46,12 +59,13 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
     @Override
     public Optional<String> getBody() {
         try {
+            String body = getBodyString();
             if(statusCode != 200){
-                addEventError(new Exception("code: "+statusCode), baseResponse.body());
+                addEventError(new Exception("code: "+statusCode), body);
             }else{
-                addEventSucess(Optional.ofNullable((T)baseResponse.body()));
+                addEventSucess(Optional.of((T)body));
             }
-            return Optional.ofNullable(baseResponse.body());
+            return Optional.of(body);
         }catch (Exception e) { 
             return Optional.empty();
         }
@@ -59,41 +73,53 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
 
     @Override
     public Optional<T> getBody(Class<T> referenceToMapper) {
-        try {
-            Optional<T> result = serialize(referenceToMapper);
-            if(statusCode != 200){
-                addEventError(new Exception("code: "+statusCode), baseResponse.body());
-            }else{
-                addEventSucess(result);
+        try{
+            String body = getBodyString();
+            try {
+                Optional<T> result = serialize(referenceToMapper);
+                if(statusCode != 200){
+                    addEventError(new Exception("code: "+statusCode), body);
+                }else{
+                    addEventSucess(result);
+                }
+                return result;
+            } catch (Exception e) {
+                addEventError(e, body);
+                return Optional.empty();
             }
-            return result;
-        } catch (Exception e) {
-            addEventError(e, baseResponse.body());
+        }catch (Exception e){
+            addEventError(e, "");
             return Optional.empty();
         }
     }
 
     @Override
     public Optional<T> getBody(HttpMapper mapper, Class<T> referenceToMapper) {
-        try {
-            Optional<T> result = serialize(mapper, referenceToMapper);
-            if(statusCode != 200){
-                addEventError(new Exception("code: "+statusCode), baseResponse.body());
-            }else{
-                addEventSucess(result);
-            }
-            return result;
-        } catch (Exception e) {
-            addEventError(e, baseResponse.body());
-            return Optional.empty();
-        }
+       try{
+           String body = getBodyString();
+           try {
+               Optional<T> result = serialize(mapper, referenceToMapper);
+               if(statusCode != 200){
+                   addEventError(new Exception("code: "+statusCode), body);
+               }else{
+                   addEventSucess(result);
+               }
+               return result;
+           } catch (Exception e) {
+               addEventError(e, body);
+               return Optional.empty();
+           }
+       }catch (Exception e){
+           addEventError(e, "");
+           return Optional.empty();
+       }
     }
 
     @Override
     public <S> Optional<S> ifErrorGet(Class<S> reference) {
         if(statusCode != 200){
             try {
-                return Optional.ofNullable(httpMapper.mapper(baseResponse.body(), reference));
+                return Optional.ofNullable(httpMapper.mapper(getBodyString(), reference));
             } catch (Exception e) {
                 return Optional.empty();
             }
@@ -105,12 +131,17 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
     public Optional<String> ifErrorGet() {
         if(statusCode != 200){
             try {
-                return Optional.ofNullable(baseResponse.body());
+                return Optional.ofNullable(getBodyString());
             } catch (Exception e) {
                 return Optional.empty();
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public StreamReader getStreamReader() {
+        return streamReader;
     }
 
     @Override
@@ -148,7 +179,7 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
             if(mapper != null){
                 setMapper(mapper);
             }
-            return Optional.ofNullable(httpMapper.mapper(baseResponse.body(), referenceToMapper));
+            return Optional.ofNullable(httpMapper.mapper(getBodyString(), referenceToMapper));
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -156,7 +187,7 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
 
     private Optional<T> serialize(Class<T> referenceToMapper){
         try {
-            return Optional.ofNullable(httpMapper.mapper(baseResponse.body(), referenceToMapper));
+            return Optional.ofNullable(httpMapper.mapper(getBodyString(), referenceToMapper));
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -185,4 +216,35 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
             }
         }
     }
+
+    private String getBodyString(){
+        return lazyBody.getOrSet(() -> {
+           try(streamReader){
+               return new String(streamReader.readOrGetAllBytes(), StandardCharsets.UTF_8);
+           }catch (Exception e){
+               throw new ErrorBaseRuntimeException(500, e.getMessage(), e);
+           }
+        });
+    }
+
+    private static class LazyBody{
+        private String bodyString;
+        private boolean initialized = false;
+
+        public String getOrSet(Supplier<String> supplier) {
+            if (!initialized) {
+                bodyString = supplier.get();
+                initialized = true;
+            }
+            return bodyString;
+        }
+
+        public void clear() {
+            bodyString = null;
+            initialized = false;
+        }
+    }
+
+
+
 }

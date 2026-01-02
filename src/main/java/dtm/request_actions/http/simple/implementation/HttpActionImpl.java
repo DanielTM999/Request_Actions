@@ -3,6 +3,7 @@ package dtm.request_actions.http.simple.implementation;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -23,7 +24,7 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import dtm.request_actions.exceptions.HttpException;
-import dtm.request_actions.exceptions.HttpRuntimeException;
+import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.http.simple.annotations.Encode;
 import dtm.request_actions.http.simple.annotations.MultipartForm;
 import dtm.request_actions.http.simple.core.HttpAction;
@@ -161,7 +162,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -172,7 +173,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -183,7 +184,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(urlConvert(url, urlParams));
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -194,7 +195,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, configuration, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -205,7 +206,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -216,7 +217,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -227,7 +228,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -238,7 +239,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, header, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -249,7 +250,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, header, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -260,7 +261,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, header, configuration, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -271,7 +272,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -282,7 +283,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return get(url, header, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -393,7 +394,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -404,7 +405,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -415,7 +416,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -426,7 +427,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -437,7 +438,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -448,7 +449,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -459,7 +460,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -470,7 +471,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -481,7 +482,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -492,7 +493,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, header, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -503,7 +504,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -514,7 +515,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, header, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -525,7 +526,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -536,7 +537,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, header, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -547,7 +548,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -558,7 +559,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return post(url, body, header, configuration);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -603,7 +604,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return delete(url);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -614,7 +615,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return delete(url, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -625,7 +626,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return delete(url);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -636,7 +637,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return delete(url, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -647,7 +648,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return delete(url, header, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -658,7 +659,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return delete(url, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -773,7 +774,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -784,7 +785,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -795,7 +796,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -806,7 +807,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -817,7 +818,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -828,7 +829,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -839,7 +840,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -850,7 +851,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -861,7 +862,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -872,7 +873,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -883,7 +884,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -894,7 +895,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, header);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -905,7 +906,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -916,7 +917,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -927,7 +928,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -938,7 +939,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -949,7 +950,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, header, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -960,7 +961,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, header, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -971,7 +972,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, header, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -982,7 +983,7 @@ public class HttpActionImpl implements HttpAction{
             try {
                 return put(url, body, header, urlParams);
             } catch (HttpException e) {
-                throw new HttpRuntimeException(e.getCode(), e.getMessage(), e);
+                throw new HttpException(e.getCode(), e.getMessage(), e);
             }
         });
     }
@@ -1040,7 +1041,7 @@ public class HttpActionImpl implements HttpAction{
                 headers.forEach(requestBuilder::header);
             }
 
-            HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<InputStream> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofInputStream());
             
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
@@ -1077,7 +1078,7 @@ public class HttpActionImpl implements HttpAction{
                 headers.forEach(requestBuilder::header);
             }
 
-            HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<InputStream> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofInputStream());
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
@@ -1106,7 +1107,7 @@ public class HttpActionImpl implements HttpAction{
                 headers.forEach(requestBuilder::header);
             }
 
-            HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<InputStream> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofInputStream());
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }
@@ -1135,7 +1136,7 @@ public class HttpActionImpl implements HttpAction{
             if (headers != null) {
                 headers.forEach(requestBuilder::header);
             }
-            HttpResponse<String> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<InputStream> response = client.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofInputStream());
             for (HttpHandler httpHandler : httpHandlers) {
                 httpHandler.onResult(response);
             }

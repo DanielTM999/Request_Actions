@@ -1,5 +1,6 @@
 package dtm.request_actions.http.simple.implementation;
 
+import java.io.InputStream;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 
@@ -7,9 +8,9 @@ import dtm.request_actions.http.simple.core.result.HttpHeaderResult;
 
 public class HttpHeaderResultImpl extends HttpHeaderResult{
 
-    private HttpResponse<String> baseResponse;
+    private final HttpResponse<InputStream> baseResponse;
     
-    HttpHeaderResultImpl(HttpResponse<String> baseResponse){
+    HttpHeaderResultImpl(HttpResponse<InputStream> baseResponse){
         this.baseResponse = baseResponse;
     }
 
