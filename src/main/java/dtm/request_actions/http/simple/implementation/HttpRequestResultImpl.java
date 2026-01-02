@@ -22,7 +22,7 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
     private HttpMapper httpMapper;
     private final HttpResponse<InputStream> baseResponse;
     private final StreamReader streamReader;
-    private final LazyBody lazyBody;
+    private String bodyString;
     private int statusCode;
 
     private HttpErrorEvent errorEvent;
@@ -35,7 +35,6 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
         this.baseResponse = baseResponse;
         this.httpMapper = httpMapper;
         this.streamReader = new HttpResultStreamReader(baseResponse.body());
-        this.lazyBody = new LazyBody();
         configure();
     }
 
@@ -218,33 +217,14 @@ public class HttpRequestResultImpl<T> extends HttpRequestResult<T> {
     }
 
     private String getBodyString(){
-        return lazyBody.getOrSet(() -> {
-           try(streamReader){
-               return new String(streamReader.readOrGetAllBytes(), StandardCharsets.UTF_8);
-           }catch (Exception e){
-               throw new ErrorBaseRuntimeException(500, e.getMessage(), e);
-           }
-        });
-    }
-
-    private static class LazyBody{
-        private String bodyString;
-        private boolean initialized = false;
-
-        public String getOrSet(Supplier<String> supplier) {
-            if (!initialized) {
-                bodyString = supplier.get();
-                initialized = true;
+        if(bodyString == null){
+            try(streamReader){
+                bodyString =  new String(streamReader.readOrGetAllBytes(), StandardCharsets.UTF_8);
+            }catch (Exception e){
+                throw new ErrorBaseRuntimeException(500, e.getMessage(), e);
             }
-            return bodyString;
         }
-
-        public void clear() {
-            bodyString = null;
-            initialized = false;
-        }
+        return bodyString;
     }
-
-
 
 }
