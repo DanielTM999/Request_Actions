@@ -99,7 +99,13 @@ public class HttpResultStreamReader implements StreamReader {
 
     @Override
     public boolean isFinished() {
-        return finished && pos >= buffer.size();
+        return (finished && pos >= buffer.size());
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.finished = true;
+        input.close();
     }
 
     private void ensureAvailable(int size) {
@@ -117,8 +123,4 @@ public class HttpResultStreamReader implements StreamReader {
         }
     }
 
-    @Override
-    public void close() throws Exception {
-        input.close();
-    }
 }
