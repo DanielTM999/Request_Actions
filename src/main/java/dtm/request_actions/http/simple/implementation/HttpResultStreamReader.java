@@ -67,6 +67,7 @@ public class HttpResultStreamReader implements StreamReader {
         return read;
     }
 
+    @Override
     public byte[] readOrGetAllBytes() {
         if (isFinished()) {
             return getReadBytes();
@@ -95,6 +96,11 @@ public class HttpResultStreamReader implements StreamReader {
     @Override
     public void skip(int bytes) {
         position(pos + bytes);
+    }
+
+    @Override
+    public int availableBytes() {
+        return buffer.size() - pos;
     }
 
     @Override
