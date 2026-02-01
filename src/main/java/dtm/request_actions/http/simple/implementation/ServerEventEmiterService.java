@@ -33,7 +33,11 @@ public final class ServerEventEmiterService implements ServerEventEmiterDispache
         this.isRunning = new AtomicBoolean(true);
         this.streamReader = streamReader;
         this.serverEventEmiter = serverEventEmiter;
-        this.executorService = Executors.newSingleThreadExecutor();
+        this.executorService = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "ServerEventEmiter-Worker-"+System.identityHashCode(serverEventEmiter));
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     @Override
