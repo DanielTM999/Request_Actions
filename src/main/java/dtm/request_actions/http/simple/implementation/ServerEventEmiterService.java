@@ -122,14 +122,22 @@ public final class ServerEventEmiterService implements ServerEventEmiterDispache
     }
 
     private void extractEventName(String line, SseContext context) {
-        context.currentEvent = line.substring(6).trim();
+        String event = line.substring(6);
+        if (!event.isEmpty() && event.charAt(0) == ' ') {
+            event = event.substring(1);
+        }
+        context.currentEvent = event;
     }
 
     private void appendEventData(String line, SseContext context) {
         if (!context.currentData.isEmpty()) {
             context.currentData.append("\n");
         }
-        context.currentData.append(line.substring(5).trim());
+        String data = line.substring(5);
+        if (!data.isEmpty() && data.charAt(0) == ' ') {
+            data = data.substring(1);
+        }
+        context.currentData.append(data);
     }
 
     private void emitEventIfReady(SseContext context) {
