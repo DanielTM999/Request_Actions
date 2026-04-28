@@ -15,11 +15,16 @@ public class DefaultHttpMapper implements HttpMapper{
 
     @Override
     public <T> T mapper(String baseRequestResponse, Class<T> referenceMapper, HttpType httpType) {
+        if(httpType == null){
+            httpType = HttpType.JSON;
+        }
         if(String.class.equals(referenceMapper)){
             return referenceMapper.cast(baseRequestResponse);
+        }else if(httpType == HttpType.RAW){
+            return null;
         }else{
             try {
-                if(httpType.equals(HttpType.JSON)){
+                if(httpType == HttpType.JSON){
                     if(JsonNode.class.equals(referenceMapper)){
                         return referenceMapper.cast(jsonMapper.readTree(baseRequestResponse));
                     }

@@ -1075,7 +1075,7 @@ public class HttpActionImpl implements HttpAction{
             }else{
                 requestBuilder = HttpRequest.newBuilder()
                         .uri(url)
-                        .POST(HttpRequest.BodyPublishers.ofString(ofString(configurationBody.getHttpTypeBody(), body)));
+                        .POST(ofPublisher(configurationBody.getHttpTypeBody(), body));
             }
 
             if(configurationBody.getTimeout() > 0){
@@ -1107,7 +1107,7 @@ public class HttpActionImpl implements HttpAction{
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(url)
-            .PUT(HttpRequest.BodyPublishers.ofString(ofString(configurationBody.getHttpTypeBody(),body)));
+            .PUT(ofPublisher(configurationBody.getHttpTypeBody(),body));
 
             if(configurationBody.getTimeout() > 0){
                 requestBuilder.timeout(Duration.ofMillis(configurationBody.getTimeout()));
@@ -1162,7 +1162,21 @@ public class HttpActionImpl implements HttpAction{
 
 
     private String ofString(HttpType httpType, Object body){
+        if (httpType == null) {
+            httpType = HttpType.JSON;
+        }
+        if (httpType == HttpType.RAW) {
+            return body == null ? "" : body.toString();
+        }
         return (httpType == HttpType.JSON) ? httpMapper.mapperToJson(body) : httpMapper.mapperToXML(body);
+    }
+
+    private HttpRequest.BodyPublisher ofPublisher(HttpType httpType, Object body){
+        if(body instanceof byte[] bytes){
+            return HttpRequest.BodyPublishers.ofByteArray(bytes);
+        }
+
+        return HttpRequest.BodyPublishers.ofString(ofString(httpType, body), StandardCharsets.UTF_8);
     }
 
     private boolean isMultipartForm(Object body){
