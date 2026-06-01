@@ -4,14 +4,15 @@ import dtm.request_actions.exceptions.DownloadSizeExceededException;
 import dtm.request_actions.exceptions.HttpException;
 import dtm.request_actions.http.download.concrete.DefaultObserverConfiguration;
 import dtm.request_actions.http.download.core.DownloadObserver;
-import dtm.request_actions.http.download.core.DownloadObserverGet;
 import dtm.request_actions.http.download.core.client.DownloadObserverClient;
+import dtm.request_actions.http.download.core.client.DownloadObserverStreamClient;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,26 @@ public class DownloadObserverService implements DownloadObserver {
     @Override
     public void newDownloadGet(URI url, Map<String, String> headers, DownloadObserverClient client) {
         CompletableFuture.runAsync(() -> execute(url, headers, client, "GET"), executorService);
+    }
+
+    @Override
+    public void newDownloadGetStream(String url, DownloadObserverStreamClient client) {
+        CompletableFuture.runAsync(() -> executeStream(URI.create(url), null, client, "GET"), executorService);
+    }
+
+    @Override
+    public void newDownloadGetStream(URI url, DownloadObserverStreamClient client) {
+        CompletableFuture.runAsync(() -> executeStream(url, null, client, "GET"), executorService);
+    }
+
+    @Override
+    public void newDownloadGetStream(String url, Map<String, String> headers, DownloadObserverStreamClient client) {
+        CompletableFuture.runAsync(() -> executeStream(URI.create(url), headers, client, "GET"), executorService);
+    }
+
+    @Override
+    public void newDownloadGetStream(URI url, Map<String, String> headers, DownloadObserverStreamClient client) {
+        CompletableFuture.runAsync(() -> executeStream(url, headers, client, "GET"), executorService);
     }
 
 
@@ -140,6 +161,95 @@ public class DownloadObserverService implements DownloadObserver {
             client.onDisconect();
         }
 
+    }
+
+    private void executeStream(URI url, Map<String, String> headers, DownloadObserverStreamClient client, String httpMethod){
+        DefaultObserverConfiguration observerConfiguration = new DefaultObserverConfiguration();
+        HttpURLConnection connection = null;
+        headers = (headers != null) ? headers : new HashMap<>();
+
+        try {
+            client.observerConfiguration(observerConfiguration);
+            URL javaUrl = url.toURL();
+            connection = (HttpURLConnection) javaUrl.openConnection();
+            connection.setRequestMethod(httpMethod);
+
+            int timeout = (int) observerConfiguration.getTimeout();
+            if (timeout > 0) {
+                connection.setConnectTimeout(timeout);
+            }
+
+            int readTimeout = (int) observerConfiguration.getReadTimeout();
+            if (readTimeout > 0){
+                connection.setReadTimeout(readTimeout);
+            }
+
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                connection.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+
+            connection.connect();
+
+            int status = connection.getResponseCode();
+            if (status >= 400) {
+                try (InputStream errorStream = connection.getErrorStream()) {
+                    String errorMessage = (errorStream != null)
+                            ? new String(errorStream.readAllBytes())
+                            : "Erro HTTP " + status;
+                    throw new HttpException(status, errorMessage);
+                }
+            }
+
+            Map<String, List<String>> userResponseHeaders = getUserResponseHeaders(connection);
+
+            int contentLength = connection.getContentLength();
+            client.onStart(contentLength, userResponseHeaders);
+
+            try (InputStream input = connection.getInputStream()){
+                byte[] buffer = new byte[observerConfiguration.getBufferSize()];
+                int bytesRead;
+                long totalRead = 0;
+                long maxSizeDownload = observerConfiguration.getMaxSizeDownload();
+                boolean checkMaxSize = maxSizeDownload > 0;
+
+                while ((bytesRead = input.read(buffer)) != -1) {
+                    totalRead += bytesRead;
+                    if (checkMaxSize && totalRead > maxSizeDownload) {
+                        throw new DownloadSizeExceededException(maxSizeDownload, totalRead);
+                    }
+
+                    byte[] content = Arrays.copyOf(buffer, bytesRead);
+                    try {
+                        client.onProgress(content, totalRead, contentLength, userResponseHeaders);
+                    } catch (Exception e) {
+                        client.onError(e);
+                    }
+                }
+
+                client.onComplete(userResponseHeaders);
+            }
+
+        }catch (Exception e){
+            client.onError(e);
+        }finally {
+            if (connection != null) connection.disconnect();
+            client.onDisconect();
+        }
+
+    }
+
+    private Map<String, List<String>> getUserResponseHeaders(HttpURLConnection connection) {
+        Map<String, List<String>> userResponseHeaders = new ConcurrentHashMap<>();
+        Map<String, List<String>> responseHeaders = connection.getHeaderFields();
+        for (Map.Entry<String, List<String>> entry : responseHeaders.entrySet()) {
+            String headerName = entry.getKey();
+            List<String> headerValues = entry.getValue();
+
+            if (headerName != null && headerValues != null) {
+                userResponseHeaders.put(headerName, headerValues);
+            }
+        }
+        return userResponseHeaders;
     }
 
 }
