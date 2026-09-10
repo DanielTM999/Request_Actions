@@ -144,3 +144,7 @@ A interface `HttpSucessEvent<T>` contém o método:
 ```java
 void onSucess(Optional<T> result);
 ```
+
+## Licença
+
+Distribuído sob a [Licença MIT](LICENSE). Copyright (c) 2026 DanielTM999.
